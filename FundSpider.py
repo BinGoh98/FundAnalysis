@@ -35,22 +35,27 @@ class FundRank(object):
         init_page = 1
         today = datetime.datetime.now().strftime('%Y-%m-%d')
 
-        url = self.base_url + "&op={}&dt={}&ft={}&pi={}&pn={}&sc={}".format('ph', 'kf', self.type_data, init_page,
-                                                                            page_size, '6yzf')
+        url = self.base_url + "&op={}&dt={}&ft={}&pi={}&pn={}&sc={}&ed={}".format('ph', 'kf', self.type_data, init_page,
+                                                                                  page_size, '6yzf', "2020-10-21")
         header = {"Referer": "https://fund.eastmoney.com/data/fundranking.html", "Host": "fund.eastmoney.com"}
         response = requests.get(url, headers=header).content.decode()
 
         total_page = int(re.search(r'allPages:([0-9]*),', response).group(1))
         pattern = r'"(.*?)"'
         df = pd.DataFrame()
-        for page in range(1, total_page + 1):
+        # for page in range(1, total_page + 1):
+        for page in range(1, 21):
+            url = self.base_url + "&op={}&dt={}&ft={}&pi={}&pn={}&sc={}".format('ph', 'kf', self.type_data,
+                                                                                      page,
+                                                                                      page_size, '6yzf')
+            response = requests.get(url, headers=header).content.decode()
             print("正在处理第{}页".format(page))
             it = re.findall(pattern, response)
             for fund in it:
                 detail = fund.split(',')
                 df = df.append(
                     {
-                        "基金代码": detail[0],
+                        "基金代码": str(detail[0]),
                         "基金简称": detail[1],
                         "日期": pd.Timestamp(detail[3]),
                         '日增长率': detail[6],
@@ -81,6 +86,7 @@ class SingleFund(object):
 
     code: 基金代码
     """
+
     def __init__(self, code):
         self.code = code
         self.base_url = "http://api.fund.eastmoney.com/f10/lsjz?callback=jQuery1830001140766273019178_1644939075382"
